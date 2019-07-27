@@ -1,13 +1,14 @@
 import 'dart:html';
 import 'package:angular/angular.dart';
 import 'package:firebase/firebase.dart' as fb;
+import 'package:firebase/firestore.dart' as fs;
 
-import '../src/model/note.dart';
+import 'package:firebase_firestore_ng/src/model/note.dart';
 
 @Injectable()
 class FirebaseService {
   final fb.Auth auth;
-  final fb.DatabaseReference databaseRef;
+  final fs.CollectionReference databaseRef; // changed from fb.DatabaseReference
   final fb.StorageReference storageRef;
   final List<Note> notes = [];
   fb.User user;
@@ -15,39 +16,52 @@ class FirebaseService {
 
   FirebaseService()
       : auth = fb.auth(),
-        databaseRef = fb.database().ref("notes"),
+        // change fb.database().ref() to fb.firestore().collection()
+        databaseRef = fb.firestore().collection("notes"),
         storageRef = fb.storage().ref("notes");
 
   init() {
-    databaseRef.onChildAdded.listen((e) {
-      // Snapshot of the data.
-      fb.DataSnapshot data = e.snapshot;
-
-      // Value of data from snapshot.
-      var val = data.val();
-      // Creates a new Note item. It is possible to retrieve a key from data.
-      var item = new Note(
-          val[jsonTagText], val[jsonTagTitle], val[jsonTagImgUrl], data.key);
-      notes.insert(0, item);
+    databaseRef.onSnapshot.listen((querySnapshot) {
+      for (var change in querySnapshot.docChanges()) {
+        var docSnapshot = change.doc;
+        switch (change.type) {
+          case "added": // substitute onChildAdded.listen()
+            var val = docSnapshot.data();
+            var item = Note(val[jsonTagText], val[jsonTagTitle],
+                val[jsonTagImgUrl], docSnapshot.id);
+            notes.insert(0, item);
+            break;
+          case "removed": // substitute onChildRemoved.listen()
+            var val = docSnapshot.data();
+            // Removes also the image from storage.
+            var imageUrl = val[jsonTagImgUrl];
+            if (imageUrl != null) {
+              removeItemImage(imageUrl);
+            }
+            notes.removeWhere((n) => n.key == docSnapshot.id);
+            break;
+        }
+      }
+      loading = false; // substitute onValue.listen()
     });
 
     // Setups listening on the child_removed event on the database ref.
-    databaseRef.onChildRemoved.listen((e) {
-      fb.DataSnapshot data = e.snapshot;
-      var val = data.val();
-
-      // Removes also the image from storage.
-      var imageUrl = val[jsonTagImgUrl];
-      if (imageUrl != null) {
-        removeItemImage(imageUrl);
-      }
-      notes.removeWhere((n) => n.key == data.key);
-    });
+//    databaseRef.onChildRemoved.listen((e) {
+//      fb.DataSnapshot data = e.snapshot;
+//      var val = data.val();
+//
+//      // Removes also the image from storage.
+//      var imageUrl = val[jsonTagImgUrl];
+//      if (imageUrl != null) {
+//        removeItemImage(imageUrl);
+//      }
+//      notes.removeWhere((n) => n.key == data.key);
+//    });
 
     // Sets loading to true when path changes
-    databaseRef.onValue.listen((e) {
-      loading = false;
-    });
+//    databaseRef.onValue.listen((e) {
+//      loading = false;
+//    });
 
     // Sets user when auth state changes
     auth.onIdTokenChanged.listen((e) {
@@ -58,7 +72,8 @@ class FirebaseService {
   // Pushes a new item as a Map to database.
   postItem(Note item) async {
     try {
-      await databaseRef.push(Note.toMap(item)).future;
+      // substitute await databaseRef.push(Note.toMap(item)).future;
+      await databaseRef.add(Map<String, dynamic>.from(Note.toMap(item)));
     } catch (e) {
       print("Error in writing to database: $e");
     }
@@ -67,7 +82,8 @@ class FirebaseService {
   // Removes item with a key from database.
   removeItem(String key) async {
     try {
-      await databaseRef.child(key).remove();
+      // substitute await databaseRef.child(key).remove();
+      await databaseRef.doc(key).delete();
     } catch (e) {
       print("Error in deleting $key: $e");
     }
