@@ -81,7 +81,7 @@ class FirebaseService {
           .listen((_) => loading = true, onDone: () => loading = false);
 
       var snapshot = await task.future;
-      return snapshot.downloadURL;
+      return snapshot.ref.getDownloadURL();
     } catch (e) {
       print("Error in uploading to storage: $e");
     }

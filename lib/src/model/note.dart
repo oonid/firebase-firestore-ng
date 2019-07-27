@@ -1,4 +1,4 @@
-library firebase_demo_ng.item;
+library firebase_firestore_ng.item;
 
 const String jsonTagText = "text";
 const String jsonTagTitle = "title";

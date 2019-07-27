@@ -1,8 +1,8 @@
-# AngularDart + Firebase = ♥ demo
+# AngularDart + Firebase Firestore = ♥ demo
 
-Demo app for my talk at DevFest Ukraine 2017 and DevFest CZ 2017. The application is written in [AngularDart](https://webdev.dartlang.org/angular) and uses the [Firebase library](https://github.com/firebase/firebase-dart/).
+The application is written in [AngularDart](https://angulardart.dev) and uses the [Firebase library](https://pub.dev/packages/firebase).
 
-![Dart + Firebase App](https://github.com/Janamou/firebase-demo-ng/blob/master/app.png)
+![Dart + Firebase App](https://github.com/oonid/firebase-firestore-ng/blob/master/app.png)
 
 ## Before running
 
@@ -15,6 +15,7 @@ initializeApp(
       apiKey: "TODO",
       authDomain: "TODO",
       databaseURL: "TODO",
+      projectId: "TODO",
       storageBucket: "TODO");
 ```
 
@@ -22,17 +23,21 @@ initializeApp(
 
 Enable Google login in Firebase console under the `Authentication/Sign-in method`.
 
+Setup [OAuth2 Consent Screen](https://console.developers.google.com/apis/credentials/consent).
+
 ### Database rules
 
 Set database rules on who can access the database under the `Database/Rules`. More info on [Database rules](https://firebase.google.com/docs/database/security/).
 
 For example:
 
-```json
-{
-  "rules": {
-    ".read": true,
-    ".write": "auth != null"
+```
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read;
+      allow write: if request.auth != null;
+    }
   }
 }
 ```
@@ -45,7 +50,7 @@ For example:
 
 ```
 service firebase.storage {
-  match /b/<YOUR_STORAGE_BUCKET>/o {
+  match /b/{bucket}/o {
     match /{allPaths=**} {
       allow read;
       allow write: if request.auth != null;

@@ -1,5 +1,7 @@
 # Files and directories created by pub
 .idea/
+*.iml
+.dart_tool/
 .packages
 .pub/
 build/
