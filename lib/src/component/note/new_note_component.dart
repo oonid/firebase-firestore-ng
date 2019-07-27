@@ -2,20 +2,20 @@ import 'dart:html';
 import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
 
-import '../../firebase_service.dart';
-import '../../model/note.dart';
+import 'package:firebase_firestore_ng/src/firebase_service.dart';
+import 'package:firebase_firestore_ng/src/model/note.dart';
 
 @Component(
     selector: 'new-note',
     templateUrl: 'new_note_component.html',
-    directives: const [CORE_DIRECTIVES, formDirectives])
+    directives: const [coreDirectives, formDirectives])
 class NewNoteComponent {
   final FirebaseService service;
   Note note = new Note();
   bool fileDisabled = false;
 
   @ViewChild("submit")
-  ElementRef submitButton;
+  HtmlElement submitButton;
 
   NewNoteComponent(this.service);
 
@@ -37,7 +37,7 @@ class NewNoteComponent {
   submitForm() {
     service.postItem(note);
 
-    submitButton.nativeElement.blur();
+    submitButton.blur();
     note = new Note();
     fileDisabled = false;
   }

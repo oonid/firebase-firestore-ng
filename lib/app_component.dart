@@ -11,7 +11,7 @@ import 'src/firebase_service.dart';
     styleUrls: const ['app_component.css'],
     templateUrl: 'app_component.html',
     directives: const [
-      CORE_DIRECTIVES,
+      coreDirectives,
       HeaderComponent,
       FooterComponent,
       NotesComponent,
